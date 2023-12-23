@@ -20,11 +20,12 @@
       {{ btnText ? btnText : t('component.cropper.selectImage') }}
     </a-button>
 
-    <CopperModal
+    <CropperModal
       @register="register"
       @upload-success="handleUploadSuccess"
       :uploadApi="uploadApi"
       :src="sourceValue"
+      :size="size"
     />
   </div>
 </template>
@@ -39,14 +40,13 @@
     watch,
     PropType,
   } from 'vue';
-
-  import CopperModal from './CopperModal.vue';
+  import CropperModal from './CropperModal.vue';
   import { useDesign } from '/@/hooks/web/useDesign';
   import { useModal } from '/@/components/Modal';
   import { useMessage } from '/@/hooks/web/useMessage';
   import { useI18n } from '/@/hooks/web/useI18n';
   import type { ButtonProps } from '/@/components/Button';
-  import { Icon } from '@/components/Icon';
+  import Icon from '@/components/Icon/Icon.vue';
 
   const props = {
     width: { type: [String, Number], default: '200px' },
@@ -54,12 +54,16 @@
     showBtn: { type: Boolean, default: true },
     btnProps: { type: Object as PropType<ButtonProps> },
     btnText: { type: String, default: '' },
-    uploadApi: { type: Function as PropType<PromiseFn> },
+    uploadApi: {
+      type: Function as PropType<({ file, name }: { file: Blob; name: string }) => Promise<void>>,
+    },
+
+    size: { type: Number, default: 5 },
   };
 
   export default defineComponent({
     name: 'CropperAvatar',
-    components: { CopperModal, Icon },
+    components: { CropperModal, Icon },
     props,
     emits: ['update:value', 'change'],
     setup(props, { emit, expose }) {
@@ -94,7 +98,11 @@
 
       function handleUploadSuccess({ source, data }) {
         sourceValue.value = source;
-        emit('change', { source, data });
+        if (props.formValueType === 'base64') {
+          emit('change', { source, data });
+        } else {
+          emit('change', data);
+        }
         createMessage.success(t('component.cropper.uploadSuccess'));
       }
 

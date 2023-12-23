@@ -16,7 +16,7 @@
     subTitle: string;
     btnText?: string;
     icon?: string;
-    handler?: Fn;
+    handler?: any;
     status?: string;
   }
 

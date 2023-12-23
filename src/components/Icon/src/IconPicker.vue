@@ -1,10 +1,11 @@
 <template>
   <a-input
-    disabled
+    readonly
     :style="{ width }"
     :placeholder="t('component.icon.placeholder')"
     :class="prefixCls"
     v-model:value="currentSelect"
+    @click="triggerPopover"
   >
     <template #addonAfter>
       <a-popover
@@ -56,16 +57,25 @@
           </template>
         </template>
 
-        <span class="cursor-pointer px-2 py-1 flex items-center" v-if="isSvgMode && currentSelect">
-          <SvgIcon :name="currentSelect" />
-        </span>
-        <Icon :icon="currentSelect || 'ion:apps-outline'" class="cursor-pointer px-2 py-1" v-else />
+        <div ref="trigger">
+          <span
+            class="cursor-pointer px-2 py-1 flex items-center"
+            v-if="isSvgMode && currentSelect"
+          >
+            <SvgIcon :name="currentSelect" />
+          </span>
+          <Icon
+            :icon="currentSelect || 'ion:apps-outline'"
+            class="cursor-pointer px-2 py-1"
+            v-else
+          />
+        </div>
       </a-popover>
     </template>
   </a-input>
 </template>
 <script lang="ts" setup>
-  import { ref, watchEffect, watch, unref } from 'vue';
+  import { ref, watchEffect, watch } from 'vue';
   import { useDesign } from '/@/hooks/web/useDesign';
   import { ScrollContainer } from '/@/components/Container';
   import { Input, Popover, Pagination, Empty } from 'ant-design-vue';
@@ -73,42 +83,45 @@
   import SvgIcon from './SvgIcon.vue';
 
   import iconsData from '../data/icons.data';
-  import { propTypes } from '/@/utils/propTypes';
   import { usePagination } from '/@/hooks/web/usePagination';
   import { useDebounceFn } from '@vueuse/core';
   import { useI18n } from '/@/hooks/web/useI18n';
-  import { useCopyToClipboard } from '/@/hooks/web/useCopyToClipboard';
-  import { useMessage } from '/@/hooks/web/useMessage';
   import svgIcons from 'virtual:svg-icons-names';
-
-  // 没有使用别名引入，是因为WebStorm当前版本还不能正确识别，会报unused警告
+  import { copyText } from '/@/utils/copyTextToClipboard';
+  
   const AInput = Input;
   const APopover = Popover;
   const APagination = Pagination;
   const AEmpty = Empty;
 
   function getIcons() {
-    const data = iconsData as any;
-    const prefix: string = data?.prefix ?? '';
-    let result: string[] = [];
-    if (prefix) {
-      result = (data?.icons ?? []).map((item) => `${prefix}:${item}`);
-    } else if (Array.isArray(iconsData)) {
-      result = iconsData as string[];
-    }
-    return result;
+    const prefix = iconsData.prefix;
+    return iconsData.icons.map((icon) => `${prefix}:${icon}`);
   }
 
   function getSvgIcons() {
-    return svgIcons.map((icon) => icon.replace('icon-', ''));
+    return svgIcons.map((icon: string) => icon.replace('icon-', ''));
   }
 
-  const props = defineProps({
-    value: propTypes.string,
-    width: propTypes.string.def('100%'),
-    pageSize: propTypes.number.def(140),
-    copy: propTypes.bool.def(false),
-    mode: propTypes.oneOf<('svg' | 'iconify')[]>(['svg', 'iconify']).def('iconify'),
+  export interface Props {
+    value?: string;
+    width?: string;
+    pageSize?: number;
+    copy?: boolean;
+    mode?: 'svg' | 'iconify';
+  }
+
+  const props = withDefaults(defineProps<Props>(), {
+    value: '',
+    width: '100%',
+    pageSize: 140,
+    copy: false,
+    mode: 'iconify',
+  });
+
+  // Don't inherit FormItem disabled、placeholder...
+  defineOptions({
+    inheritAttrs: false,
   });
 
   const emit = defineEmits(['change', 'update:value']);
@@ -119,22 +132,18 @@
   const currentSelect = ref('');
   const visible = ref(false);
   const currentList = ref(icons);
+  const trigger = ref<HTMLDivElement>();
+
+  const triggerPopover = () => {
+    if (trigger.value) {
+      trigger.value.click();
+    }
+  };
 
   const { t } = useI18n();
   const { prefixCls } = useDesign('icon-picker');
 
   const debounceHandleSearchChange = useDebounceFn(handleSearchChange, 100);
-
-  let clipboardRef;
-  let isSuccessRef;
-
-  if (props.copy) {
-    const clipboard = useCopyToClipboard(props.value);
-    clipboardRef = clipboard?.clipboardRef;
-    isSuccessRef = clipboard?.isSuccessRef;
-  }
-
-  const { createMessage } = useMessage();
 
   const { getPaginationList, getTotal, setCurrentPage } = usePagination(
     currentList,
@@ -149,10 +158,9 @@
     () => currentSelect.value,
     (v) => {
       emit('update:value', v);
-      return emit('change', v);
+      emit('change', v);
     },
   );
-
   function handlePageChange(page: number) {
     setCurrentPage(page);
   }
@@ -160,20 +168,18 @@
   function handleClick(icon: string) {
     currentSelect.value = icon;
     if (props.copy) {
-      clipboardRef.value = icon;
-      if (unref(isSuccessRef)) {
-        createMessage.success(t('component.icon.copy'));
-      }
+      copyText(icon, t('component.icon.copy'));
     }
   }
 
   function handleSearchChange(e: Event) {
-    const value = e.target.value;
+    const value = (e.target as HTMLInputElement).value;
     if (!value) {
       setCurrentPage(1);
       currentList.value = icons;
       return;
     }
+    currentSelect.value = value
     currentList.value = icons.filter((item) => item.includes(value));
   }
 </script>
@@ -183,6 +189,10 @@
   .@{prefix-cls} {
     .ant-input-group-addon {
       padding: 0;
+    }
+
+    .ant-input {
+      cursor: pointer;
     }
 
     &-popover {

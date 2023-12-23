@@ -3,7 +3,7 @@ import type { BasicTableProps } from '../types/table';
 import { unref } from 'vue';
 import { ROW_KEY } from '../const';
 import { isString, isFunction } from '/@/utils/is';
-import { Key } from 'ant-design-vue/lib/table/interface';
+import type { Key } from 'ant-design-vue/lib/table/interface';
 
 interface Options {
   setSelectedRowKeys: (keys: Key[]) => void;
@@ -15,7 +15,7 @@ interface Options {
 
 function getKey(
   record: Recordable,
-  rowKey: Key | ((record: Record<string, any>) => string) | undefined,
+  rowKey: string | ((record: Record<string, any>) => string) | undefined,
   autoCreateKey?: boolean,
 ) {
   if (!rowKey || autoCreateKey) {
@@ -48,9 +48,9 @@ export function useCustomRow(
           const isCheckbox = rowSelection.type === 'checkbox';
           if (isCheckbox) {
             // 找到tr
-            const tr: HTMLElement = (e as MouseEvent)
+            const tr = (e as MouseEvent)
               .composedPath?.()
-              .find((dom: EventTarget) => (dom as HTMLElement).tagName === 'TR') as HTMLElement;
+              .find((dom) => (dom as HTMLElement).tagName === 'TR') as HTMLElement;
             if (!tr) return;
             // 找到Checkbox，检查是否为disabled
             const checkBox = tr.querySelector('input[type=checkbox]');

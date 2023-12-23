@@ -33,8 +33,7 @@
   import { CreateContextOptions } from '/@/components/ContextMenu';
   import { treeEmits, treeProps } from './types/tree';
   import { createBEM } from '/@/utils/bem';
-  import { useAppStore } from '/@/store/modules/app';
-  import { ThemeEnum } from '/@/enums/appEnum';
+  import type { TreeProps } from 'ant-design-vue/es/tree/Tree';
 
   export default defineComponent({
     name: 'BasicTree',
@@ -108,7 +107,7 @@
           },
           onRightClick: handleRightClick,
         };
-        return omit(propsData, 'treeData', 'class');
+        return omit(propsData, 'treeData', 'class') as TreeProps;
       });
 
       const getTreeData = computed((): TreeItem[] =>
@@ -131,7 +130,7 @@
         getSelectedNode,
       } = useTree(treeDataRef, getFieldNames);
 
-      function getIcon(params: Recordable, icon?: string) {
+      function getIcon(params: TreeItem, icon?: string) {
         if (!icon) {
           if (props.renderIcon && isFunction(props.renderIcon)) {
             return props.renderIcon(params);
@@ -321,6 +320,7 @@
       });
 
       const instance: TreeActionType = {
+        getTreeData: () => treeDataRef,
         setExpandedKeys,
         getExpandedKeys,
         setSelectedKeys,
@@ -394,16 +394,26 @@
           ) : (
             title
           );
+
+          const iconDom = icon ? (
+            <TreeIcon icon={icon} />
+          ) : slots.icon ? (
+            <span class="mr-1">{getSlot(slots, 'icon')}</span>
+          ) : null;
+
           item[titleField] = (
             <span
               class={`${bem('title')} pl-2`}
               onClick={handleClickNode.bind(null, item[keyField], item[childrenField])}
             >
               {slots?.title ? (
-                getSlot(slots, 'title', item)
+                <>
+                  {iconDom}
+                  {getSlot(slots, 'title', item)}
+                </>
               ) : (
                 <>
-                  {icon && <TreeIcon icon={icon} />}
+                  {iconDom}
                   {titleDom}
                   <span class={bem('actions')}>{renderAction(item)}</span>
                 </>
@@ -417,35 +427,21 @@
 
       expose(instance);
 
-      const bgColor = ref<string>();
-
-      const appStore = useAppStore();
-
-      const changePrefix = function (value: string) {
-        if (value === ThemeEnum.DARK) {
-          bgColor.value = unref(props.treeWrapperClassName) + ' bg-dark-800 ';
-        } else {
-          bgColor.value = unref(props.treeWrapperClassName) + ' bg-white ';
-        }
-      };
-
-      changePrefix(appStore.getDarkMode);
-
-      watch(
-        () => appStore.getDarkMode,
-        (value, _oldValue) => {
-          changePrefix(value);
-        },
-      );
-
       return () => {
-        const { title, helpMessage, toolbar, search, checkable } = props;
+        const { title, helpMessage, toolbar, search, checkable, noPadding } = props;
         const showTitle = title || toolbar || search || slots.headerTitle;
-        const scrollStyle: CSSProperties = {
-          height: 'calc(100% - 38px)',
-          paddingTop: '1rem',
-          paddingRight: '1rem',
-        };
+        let scrollStyle: CSSProperties;
+        if (noPadding) {
+          scrollStyle = {
+            height: 'calc(100% - 38px)',
+          };
+        } else {
+          scrollStyle = {
+            height: 'calc(100% - 38px)',
+            paddingTop: '1rem',
+            paddingRight: '1rem',
+          };
+        }
         return (
           <div class={[bem(), 'h-full', attrs.class]}>
             {showTitle && (
@@ -464,9 +460,15 @@
                 {extendSlots(slots)}
               </TreeHeader>
             )}
-            <Spin wrapperClassName={unref(bgColor)} spinning={unref(props.loading)} tip="加载中...">
+            <Spin
+              wrapperClassName={unref(props.treeWrapperClassName)}
+              spinning={unref(props.loading)}
+              tip="加载中..."
+            >
               <ScrollContainer style={scrollStyle} v-show={!unref(getNotFound)}>
-                <Tree {...unref(getBindValues)} showIcon={false} treeData={treeData.value} />
+                <Tree {...unref(getBindValues)} showIcon={false} treeData={treeData.value}>
+                  {extendSlots(slots, ['title'])}
+                </Tree>
               </ScrollContainer>
               <Empty
                 v-show={unref(getNotFound)}

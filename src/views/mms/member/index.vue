@@ -12,7 +12,7 @@
               danger
               preIcon="ant-design:delete-outlined"
               v-if="showDeleteButton"
-              @click="handleBatchDelete()"
+              @click="handleBatchDelete"
             >
               {{ t('common.delete') }}
             </Button>
@@ -172,7 +172,7 @@
         await reload();
       }
 
-      function handleSelect(rankId = '') {
+      function handleSelect(rankId) {
         searchInfo.rankId = rankId;
         reload();
       }

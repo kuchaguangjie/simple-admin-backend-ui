@@ -1,6 +1,6 @@
 <template>
   <Select
-    @dropdown-visible-change="handleFetch"
+    @dropdownVisibleChange="handleFetch"
     v-bind="$attrs"
     @change="handleChange"
     :options="getOptions"
@@ -26,7 +26,7 @@
   import { Select } from 'ant-design-vue';
   import { isFunction } from '/@/utils/is';
   import { useRuleFormItem } from '/@/hooks/component/useFormItem';
-  import { useAttrs } from '/@/hooks/core/useAttrs';
+  import { useAttrs } from '@vben/hooks';
   import { get, omit } from 'lodash-es';
   import { LoadingOutlined } from '@ant-design/icons-vue';
   import { useI18n } from '/@/hooks/web/useI18n';
@@ -70,7 +70,7 @@
       const { t } = useI18n();
 
       // Embedded in the form, just use the hook binding to perform form verification
-      const [state] = useRuleFormItem(props, 'value', 'change', emitData) as number[] | string[];
+      const [state] = useRuleFormItem(props, 'value', 'change', emitData);
 
       const getOptions = computed(() => {
         const { labelField, valueField, numberToString } = props;
@@ -93,7 +93,7 @@
       });
 
       watch(
-        () => state.toString,
+        () => state.value,
         (v) => {
           emit('update:value', v);
         },

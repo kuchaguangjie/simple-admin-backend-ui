@@ -1,7 +1,7 @@
 import { BasicColumn, FormSchema } from '/@/components/Table';
 import { h } from 'vue';
 import { Tag } from 'ant-design-vue';
-import { Icon } from '@/components/Icon';
+import Icon from '@/components/Icon/Icon.vue';
 import { useI18n } from '/@/hooks/web/useI18n';
 import { formatToDateTime } from '/@/utils/dateUtil';
 import { getMenuList } from '/@/api/sys/menu';
@@ -58,8 +58,8 @@ export const columns: BasicColumn[] = [
     },
   },
   {
-    title: t('sys.menu.component'),
-    dataIndex: 'component',
+    title: t('sys.menu.routePath'),
+    dataIndex: 'path',
     width: 200,
   },
   {
@@ -111,11 +111,11 @@ export const formSchema: FormSchema[] = [
     defaultValue: 1,
     componentProps: {
       options: [
-        { label: t('sys.menu.directory'), value: 2 },
+        { label: t('sys.menu.directory'), value: 0 },
         { label: t('sys.menu.menu'), value: 1 },
       ],
     },
-    colProps: { lg: 24, md: 24 },
+    colProps: { lg: 24, md: 24, sm: 24 },
   },
   {
     field: 'id',
@@ -129,6 +129,15 @@ export const formSchema: FormSchema[] = [
     component: 'Input',
     required: true,
     rules: [{ max: 50 }],
+    colProps: { lg: 12, md: 12, sm: 12 },
+  },
+  {
+    field: 'title',
+    label: t('sys.menu.menuTitle'),
+    component: 'Input',
+    required: true,
+    rules: [{ max: 50 }],
+    colProps: { lg: 12, md: 12, sm: 12 },
   },
   {
     field: 'parentId',
@@ -147,43 +156,34 @@ export const formSchema: FormSchema[] = [
         value: ParentIdEnum.DEFAULT,
       },
     },
-  },
-  {
-    field: 'title',
-    label: t('sys.menu.menuTitle'),
-    component: 'Input',
-    required: true,
-    rules: [{ max: 50 }],
-  },
-  {
-    field: 'sort',
-    label: t('sys.menu.order'),
-    defaultValue: 0,
-    component: 'InputNumber',
-    required: true,
-    rules: [{ type: 'number', max: 1000 }],
+    colProps: { lg: 12, md: 12, sm: 12 },
   },
   {
     field: 'icon',
     label: t('sys.menu.icon'),
     component: 'IconPicker',
     required: true,
+    colProps: { lg: 12, md: 12, sm: 12 },
   },
   {
     field: 'path',
     label: t('sys.menu.routePath'),
     component: 'Input',
     required: true,
-    // ifShow: ({ values }) => isMenu(values.menuType),
-    rules: [{ max: 200 }],
+    helpMessage: t('sys.menu.pathHelp'),
+    // eslint-disable-next-line no-useless-escape
+    rules: [{ pattern: /^(\/(\:)?[0-9A-Za-z_-]+)*$/gm, message: t('common.wrongFormat') }],
+    colProps: { lg: 24, md: 24, sm: 24 },
   },
   {
     field: 'component',
     label: t('sys.menu.componentPath'),
     component: 'Input',
     required: true,
-    rules: [{ max: 100 }],
+    helpMessage: t('sys.menu.componentHelp'),
     ifShow: ({ values }) => isMenu(values.menuType),
+    rules: [{ pattern: /^(\/[0-9A-Za-z_-]+)*$/gm, message: t('common.wrongFormat') }],
+    colProps: { lg: 24, md: 24, sm: 24 },
   },
   {
     field: 'redirect',
@@ -192,6 +192,7 @@ export const formSchema: FormSchema[] = [
     defaultValue: '',
     ifShow: ({ values }) => isMenu(values.menuType),
     rules: [{ max: 300 }],
+    colProps: { lg: 24, md: 24, sm: 24 },
   },
   {
     field: 'frameSrc',
@@ -200,14 +201,7 @@ export const formSchema: FormSchema[] = [
     defaultValue: '',
     ifShow: ({ values }) => isMenu(values.menuType),
     rules: [{ max: 300 }],
-  },
-  {
-    field: 'dynamicLevel',
-    label: t('sys.menu.dynamicLevel'),
-    defaultValue: 20,
-    component: 'InputNumber',
-    required: true,
-    rules: [{ type: 'number', max: 30 }],
+    colProps: { lg: 24, md: 24, sm: 24 },
   },
   {
     field: 'realPath',
@@ -216,6 +210,27 @@ export const formSchema: FormSchema[] = [
     defaultValue: '',
     ifShow: ({ values }) => isMenu(values.menuType),
     rules: [{ max: 300 }],
+    colProps: { lg: 24, md: 24, sm: 24 },
+  },
+  {
+    field: 'sort',
+    label: t('sys.menu.order'),
+    component: 'InputNumber',
+    required: true,
+    componentProps: {
+      max: 10000,
+    },
+    colProps: { lg: 12, md: 12, sm: 12 },
+  },
+  {
+    field: 'dynamicLevel',
+    label: t('sys.menu.dynamicLevel'),
+    component: 'InputNumber',
+    required: true,
+    componentProps: {
+      max: 20,
+    },
+    colProps: { lg: 12, md: 12, sm: 12 },
   },
   {
     field: 'disabled',
@@ -228,19 +243,7 @@ export const formSchema: FormSchema[] = [
         { label: t('common.off'), value: true },
       ],
     },
-  },
-  {
-    field: 'isExt',
-    label: t('sys.menu.isHttpPath'),
-    component: 'RadioButtonGroup',
-    defaultValue: false,
-    ifShow: ({ values }) => isMenu(values.menuType),
-    componentProps: {
-      options: [
-        { label: t('common.yes'), value: true },
-        { label: t('common.no'), value: false },
-      ],
-    },
+    colProps: { lg: 12, md: 12, sm: 12 },
   },
   {
     field: 'ignoreKeepAlive',
@@ -253,6 +256,7 @@ export const formSchema: FormSchema[] = [
         { label: t('common.no'), value: true },
       ],
     },
+    colProps: { lg: 12, md: 12, sm: 12 },
     ifShow: ({ values }) => isMenu(values.menuType),
   },
   {
@@ -266,6 +270,7 @@ export const formSchema: FormSchema[] = [
         { label: t('common.no'), value: false },
       ],
     },
+    colProps: { lg: 12, md: 12, sm: 12 },
   },
   {
     field: 'hideBreadcrumb',
@@ -279,6 +284,7 @@ export const formSchema: FormSchema[] = [
       ],
     },
     ifShow: ({ values }) => isMenu(values.menuType),
+    colProps: { lg: 12, md: 12, sm: 12 },
   },
   {
     field: 'hideTab',
@@ -292,6 +298,7 @@ export const formSchema: FormSchema[] = [
       ],
     },
     ifShow: ({ values }) => isMenu(values.menuType),
+    colProps: { lg: 12, md: 12, sm: 12 },
   },
   {
     field: 'carryParam',
@@ -305,6 +312,7 @@ export const formSchema: FormSchema[] = [
       ],
     },
     ifShow: ({ values }) => isMenu(values.menuType),
+    colProps: { lg: 12, md: 12, sm: 12 },
   },
   {
     field: 'hideChildrenInMenu',
@@ -317,6 +325,7 @@ export const formSchema: FormSchema[] = [
         { label: t('common.no'), value: false },
       ],
     },
+    colProps: { lg: 12, md: 12, sm: 12 },
   },
   {
     field: 'affix',
@@ -330,18 +339,6 @@ export const formSchema: FormSchema[] = [
       ],
     },
     ifShow: ({ values }) => isMenu(values.menuType),
-  },
-  {
-    field: 'hideTab',
-    label: t('sys.menu.hideTab'),
-    component: 'RadioButtonGroup',
-    defaultValue: false,
-    componentProps: {
-      options: [
-        { label: t('common.yes'), value: true },
-        { label: t('common.no'), value: false },
-      ],
-    },
-    ifShow: ({ values }) => isMenu(values.menuType),
+    colProps: { lg: 12, md: 12, sm: 12 },
   },
 ];

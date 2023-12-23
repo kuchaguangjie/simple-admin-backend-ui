@@ -50,6 +50,7 @@ export default {
   start: 'Start',
   stop: 'Stop',
   delete: 'Delete',
+  submit: 'Submit',
   // notification
   deleteConfirm: 'Confirm the deletion?',
   operateSuccess: 'Successful operation',
@@ -69,4 +70,6 @@ export default {
   notAllowDeleteAdminData: "Disallow deletion of administrator's data",
   notAllowChangeStatus: 'Disallow modification of status',
   notAllowSameAsParentId: 'The parent ID cannot be the same as its own ID',
+  wrongFormat: 'Wrong format',
+  required: 'Required',
 };

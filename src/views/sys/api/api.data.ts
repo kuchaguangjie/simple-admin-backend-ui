@@ -1,6 +1,8 @@
+import { h } from 'vue';
 import { BasicColumn, FormSchema } from '/@/components/Table';
 import { useI18n } from '/@/hooks/web/useI18n';
 import { formatToDateTime } from '/@/utils/dateUtil';
+import { Tag } from 'ant-design-vue';
 
 const { t } = useI18n();
 
@@ -8,27 +10,52 @@ export const columns: BasicColumn[] = [
   {
     title: t('sys.apis.path'),
     dataIndex: 'path',
-    width: 200,
+    width: 50,
   },
   {
     title: t('sys.apis.group'),
     dataIndex: 'group',
-    width: 50,
+    width: 20,
+  },
+  {
+    title: t('sys.apis.serviceName'),
+    dataIndex: 'serviceName',
+    width: 20,
   },
   {
     title: t('sys.apis.description'),
     dataIndex: 'trans',
-    width: 200,
+    width: 80,
   },
   {
     title: t('sys.apis.method'),
     dataIndex: 'method',
-    width: 50,
+    width: 20,
+  },
+  {
+    title: t('common.required'),
+    dataIndex: 'isRequired',
+    width: 10,
+    customRender: ({ record }) => {
+      let resultText = '';
+      if (record.isRequired === true) {
+        resultText = t('common.yes');
+      } else {
+        resultText = t('common.no');
+      }
+      return h(
+        Tag,
+        {
+          color: record.isRequired === true ? 'green' : 'red',
+        },
+        () => resultText,
+      );
+    },
   },
   {
     title: t('common.createTime'),
     dataIndex: 'createdAt',
-    width: 70,
+    width: 30,
     customRender: ({ record }) => {
       return formatToDateTime(record.createdAt);
     },
@@ -42,6 +69,13 @@ export const searchFormSchema: FormSchema[] = [
     component: 'Input',
     colProps: { span: 8 },
     rules: [{ max: 200 }],
+  },
+  {
+    field: 'serviceName',
+    label: t('sys.apis.serviceName'),
+    component: 'Input',
+    colProps: { span: 8 },
+    rules: [{ max: 20 }],
   },
   {
     field: 'group',
@@ -89,6 +123,12 @@ export const formSchema: FormSchema[] = [
     rules: [{ max: 200 }],
   },
   {
+    field: 'serviceName',
+    label: t('sys.apis.serviceName'),
+    component: 'Input',
+    rules: [{ max: 20 }],
+  },
+  {
     field: 'group',
     label: t('sys.apis.group'),
     required: true,
@@ -116,5 +156,18 @@ export const formSchema: FormSchema[] = [
         { label: 'PATCH', value: 'PATCH' },
       ],
     },
+  },
+  {
+    field: 'isRequired',
+    label: t('common.required'),
+    component: 'RadioButtonGroup',
+    defaultValue: false,
+    componentProps: {
+      options: [
+        { label: t('common.yes'), value: true },
+        { label: t('common.no'), value: false },
+      ],
+    },
+    helpMessage: t('sys.apis.isRequiredHelpMessage'),
   },
 ];

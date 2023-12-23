@@ -4,14 +4,16 @@ import { BaseListResp } from '/@/api/model/baseModel';
  *  @description: Api info response
  */
 export interface ApiInfo {
-  id: number;
+  id?: number;
   createdAt?: number;
   updatedAt?: number;
-  trans: string;
+  trans?: string;
   path: string;
-  description: string;
+  description?: string;
   group: string;
   method: string;
+  isRequired: boolean;
+  serviceName: string;
 }
 
 /**

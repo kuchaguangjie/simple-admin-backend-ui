@@ -68,26 +68,10 @@
   @prefix-cls: ~'@{namespace}-basic-drawer-footer';
 
   @footer-height: 60px;
-
-  [data-theme='dark'] {
-    .@{prefix-cls} {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      padding: 0 12px 0 20px;
-      border-top: 1px solid gray;
-      background-color: #1f1f1f;
-      text-align: right;
-
-      > * {
-        margin-right: 8px;
-      }
-    }
-  }
-
   .@{prefix-cls} {
     position: absolute;
     bottom: 0;
+    left: 0;
     width: 100%;
     padding: 0 12px 0 20px;
     border-top: 1px solid @border-color-base;

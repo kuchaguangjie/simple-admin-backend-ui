@@ -148,6 +148,10 @@ export default {
     editMenu: 'Eidt Menu',
     addMenuParam: 'Add Parameter',
     editMenuParam: 'Edit Parameter',
+    // help
+    componentHelp:
+      'The directory is "LAYOUT", embedded pages use "IFrame", and regular pages use the page path.',
+    pathHelp: 'All menus including directories must set the path.',
   },
   role: {
     // noun
@@ -173,9 +177,13 @@ export default {
     description: 'Description',
     method: 'Method',
     group: 'Group',
+    serviceName: 'Service Name',
     // action
     addApi: 'Add API',
     editApi: 'Edit API',
+    // help message
+    isRequiredHelpMessage:
+      'Whether it is a necessary API, if it is a necessary API, it must be selected during authorization management, and cancellation is not allowed',
   },
   authority: {
     authorityManagement: 'Authorization Management',
@@ -196,6 +204,7 @@ export default {
     editUser: 'Edit User',
     changePassword: 'Change Password',
     forceLoggingOut: 'Force logging out',
+    changeAvatar: 'Change Avatar',
   },
   init: {
     // noun
@@ -205,6 +214,13 @@ export default {
     initFileDatabase: 'Initialize file manager database (optional)',
     initMMSDatabase: 'Initialize member management service database (optional)',
     initJobDatabase: 'Initialize scheduled task management service database (optional)',
+    initMcmsDatabase: 'Initialize message center management service database (optional)',
+    initCustom: 'Custom Initialization',
+    initUrl: 'Initialization URL',
+    initPort: 'Initialization Port',
+    initService: 'Initialization Service',
+    initRedirect: 'You will be redirected to <URL>:<Port>/<Service>/init/database',
+    initOptional: 'Optional',
   },
   sys: {
     version: 'Version',
@@ -212,8 +228,7 @@ export default {
     navigation: 'Navigation',
     info: 'System Information',
     // notification
-    morning: 'Good morning',
-    niceDay: 'have a nice day!',
+    welcome: 'Welcome to use Simple Admin',
   },
   dictionary: {
     // noun

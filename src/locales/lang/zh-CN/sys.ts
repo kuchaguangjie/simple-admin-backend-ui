@@ -142,6 +142,9 @@ export default {
     editMenu: '编辑菜单',
     addMenuParam: '新增参数',
     editMenuParam: '编辑参数',
+    // help
+    componentHelp: '目录为 LAYOUT, 内嵌页面使用 IFrame, 普通页面则为页面路径',
+    pathHelp: '所有菜单包括目录都需要设置路径',
   },
   role: {
     // noun
@@ -162,19 +165,22 @@ export default {
   },
   apis: {
     // noun
-    apiList: 'API列表',
+    apiList: '接口列表',
     path: '路径',
     description: '描述',
     method: '方法',
     group: '分组',
+    serviceName: '所属服务',
     // action
-    addApi: '添加API',
-    editApi: '编辑API',
+    addApi: '添加接口',
+    editApi: '编辑接口',
+    // help message
+    isRequiredHelpMessage: '是否为必要接口,如果是必要接口,则在权限管理时为必选,不允许取消',
   },
   authority: {
     authorityManagement: '权限管理',
     menuAuthority: '菜单',
-    apiAuthority: 'API',
+    apiAuthority: '接口',
   },
   user: {
     // noun
@@ -190,6 +196,7 @@ export default {
     editUser: '编辑用户',
     changePassword: '修改密码',
     forceLoggingOut: '强制登出',
+    changeAvatar: '更换头像',
   },
   init: {
     // noun
@@ -199,6 +206,13 @@ export default {
     initFileDatabase: '文件管理数据库初始化（可选）',
     initMMSDatabase: '会员服务(MMS)数据库初始化（可选）',
     initJobDatabase: '定时任务服务数据库初始化（可选）',
+    initMcmsDatabase: '消息中心服务数据库初始化（可选）',
+    initCustom: '自助初始化',
+    initUrl: '初始化域名或 IP 地址',
+    initPort: '初始化端口',
+    initService: '初始化服务名',
+    initRedirect: '您将跳转到 <URL>:<Port>/<Service>/init/database',
+    initOptional: '可选',
   },
   sys: {
     version: '系统版本',
@@ -206,8 +220,7 @@ export default {
     navigation: '快捷导航',
     info: '系统信息',
     // notification
-    morning: '早安',
-    niceDay: '开始您一天的工作吧！',
+    welcome: '欢迎使用 Simple Admin',
   },
   dictionary: {
     // noun

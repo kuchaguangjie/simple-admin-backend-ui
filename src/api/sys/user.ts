@@ -11,6 +11,10 @@ import {
   ChangePasswordReq,
   ResetByEmailInfo,
   ResetBySmsInfo,
+  LoginByEmailReq,
+  LoginBySmsReq,
+  RegisterByEmailReq,
+  RegisterBySmsReq,
 } from './model/userModel';
 import { BaseDataResp, BaseListReq, BaseResp, BaseUUIDReq, BaseUUIDsReq } from '../model/baseModel';
 
@@ -21,7 +25,11 @@ enum Api {
   DeleteUser = '/sys-api/user/delete',
   GetUserById = '/sys-api/user',
   Login = '/sys-api/user/login',
+  LoginByEmail = '/sys-api/user/login_by_email',
+  LoginBySms = '/sys-api/user/login_by_sms',
   Register = '/sys-api/user/register',
+  RegisterByEmail = '/sys-api/user/register_by_email',
+  RegisterBySms = '/sys-api/user/register_by_sms',
   Logout = '/sys-api/user/logout',
   GetUserInfo = '/sys-api/user/info',
   GetPermCode = '/sys-api/user/perm',
@@ -110,6 +118,38 @@ export function login(params: LoginReq, mode: ErrorMessageMode = 'notice') {
 }
 
 /**
+ * @description: User login by email api
+ */
+export function loginByEmail(params: LoginByEmailReq, mode: ErrorMessageMode = 'notice') {
+  return defHttp.post<BaseDataResp<LoginResp>>(
+    {
+      url: Api.LoginByEmail,
+      params,
+    },
+    {
+      errorMessageMode: mode,
+      successMessageMode: mode,
+    },
+  );
+}
+
+/**
+ * @description: User login by sms api
+ */
+export function loginBySms(params: LoginBySmsReq, mode: ErrorMessageMode = 'notice') {
+  return defHttp.post<BaseDataResp<LoginResp>>(
+    {
+      url: Api.LoginBySms,
+      params,
+    },
+    {
+      errorMessageMode: mode,
+      successMessageMode: mode,
+    },
+  );
+}
+
+/**
  * @description: User register api
  */
 export function register(params: RegisterReq, mode: ErrorMessageMode = 'notice') {
@@ -126,22 +166,57 @@ export function register(params: RegisterReq, mode: ErrorMessageMode = 'notice')
 }
 
 /**
+ * @description: User register by email api
+ */
+export function registerByEmail(params: RegisterByEmailReq, mode: ErrorMessageMode = 'notice') {
+  return defHttp.post<BaseResp>(
+    {
+      url: Api.RegisterByEmail,
+      params,
+    },
+    {
+      errorMessageMode: mode,
+      successMessageMode: mode,
+    },
+  );
+}
+
+/**
+ * @description: User register by Sms api
+ */
+export function registerBySms(params: RegisterBySmsReq, mode: ErrorMessageMode = 'notice') {
+  return defHttp.post<BaseResp>(
+    {
+      url: Api.RegisterBySms,
+      params,
+    },
+    {
+      errorMessageMode: mode,
+      successMessageMode: mode,
+    },
+  );
+}
+
+/**
  * @description: Get user's basic info
  */
 
 export function getUserInfo() {
   return defHttp.get<BaseDataResp<GetUserInfoModel>>(
     { url: Api.GetUserInfo },
-    { errorMessageMode: 'none' },
+    { errorMessageMode: 'notice' },
   );
 }
 
 export function getPermCode() {
-  return defHttp.get<BaseDataResp<string[]>>({ url: Api.GetPermCode });
+  return defHttp.get<BaseDataResp<string[]>>(
+    { url: Api.GetPermCode },
+    { errorMessageMode: 'notice' },
+  );
 }
 
 export function doLogout() {
-  return defHttp.get({ url: Api.Logout });
+  return defHttp.get({ url: Api.Logout }, { errorMessageMode: 'notice' });
 }
 
 /**
@@ -151,7 +226,7 @@ export function doLogout() {
 export function getUserProfile() {
   return defHttp.get<BaseDataResp<UserProfile>>(
     { url: Api.Profile },
-    { errorMessageMode: 'message' },
+    { errorMessageMode: 'notice' },
   );
 }
 
@@ -159,8 +234,11 @@ export function getUserProfile() {
  *  author: Ryan Su
  *  @description: update user profile
  */
-export function updateProfile(params: UserProfile) {
-  return defHttp.post<BaseResp>({ url: Api.Profile, params }, { errorMessageMode: 'message' });
+export function updateProfile(params: UserProfile, mode: ErrorMessageMode = 'notice') {
+  return defHttp.post<BaseResp>(
+    { url: Api.Profile, params },
+    { errorMessageMode: mode, successMessageMode: mode },
+  );
 }
 
 /**
@@ -171,7 +249,7 @@ export function updateProfile(params: UserProfile) {
 export function changePassword(params: ChangePasswordReq) {
   return defHttp.post<BaseResp>(
     { url: Api.ChangePassword, params },
-    { errorMessageMode: 'message' },
+    { errorMessageMode: 'notice' },
   );
 }
 

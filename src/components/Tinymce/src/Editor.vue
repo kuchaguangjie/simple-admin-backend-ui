@@ -46,6 +46,7 @@
   import 'tinymce/plugins/visualblocks';
   import 'tinymce/plugins/visualchars';
   import 'tinymce/plugins/wordcount';
+  import 'tinymce/plugins/image';
 
   import {
     defineComponent,
@@ -61,7 +62,7 @@
   import { toolbar, plugins } from './tinymce';
   import { buildShortUUID } from '/@/utils/uuid';
   import { bindHandlers } from './helper';
-  import { onMountedOrActivated } from '/@/hooks/core/onMountedOrActivated';
+  import { onMountedOrActivated } from '@vben/hooks';
   import { useDesign } from '/@/hooks/web/useDesign';
   import { isNumber } from '/@/utils/is';
   import { useLocale } from '/@/locales/useLocale';
@@ -133,9 +134,16 @@
         return appStore.getDarkMode === 'light' ? 'oxide' : 'oxide-dark';
       });
 
+      const contentCssName = computed(() => {
+        return appStore.getDarkMode === 'light' ? 'default' : 'dark';
+      });
+
       const langName = computed(() => {
         const lang = useLocale().getLocale.value;
-        return ['zh_CN', 'en'].includes(lang) ? lang : 'zh_CN';
+        if (lang === 'zh_CN') {
+          return 'zh-Hans';
+        }
+        return lang;
       });
 
       const initOptions = computed((): RawEditorOptions => {
@@ -155,10 +163,14 @@
           object_resizing: false,
           auto_focus: true,
           skin: skinName.value,
+          promotion: false,
           model_url: publicPath + 'resource/tinymce/models/dom/model.min.js',
           skin_url: publicPath + 'resource/tinymce/skins/ui/' + skinName.value,
           content_css:
-            publicPath + 'resource/tinymce/skins/ui/' + skinName.value + '/content.min.css',
+            publicPath +
+            'resource/tinymce/skins/content/' +
+            contentCssName.value +
+            '/content.min.css',
           ...options,
           setup: (editor: Editor) => {
             editorRef.value = editor;
@@ -240,7 +252,7 @@
         bindHandlers(e, attrs, unref(editorRef));
       }
 
-      function setValue(editor: Recordable, val: string, prevVal?: string) {
+      function setValue(editor: Recordable, val?: string, prevVal?: string) {
         if (
           editor &&
           typeof val === 'string' &&
@@ -257,14 +269,14 @@
 
         watch(
           () => props.modelValue as string,
-          (val: string, prevVal: string) => {
+          (val, prevVal) => {
             setValue(editor, val, prevVal);
           },
         );
 
         watch(
           () => props.value as string,
-          (val: string, prevVal: string) => {
+          (val, prevVal) => {
             setValue(editor, val, prevVal);
           },
           {

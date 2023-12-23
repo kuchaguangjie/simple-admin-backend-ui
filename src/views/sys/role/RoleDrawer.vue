@@ -15,7 +15,7 @@
     </template>
     <BasicForm @register="registerForm" />
     <BasicDrawer
-      v-model:visible="childrenDrawer"
+      v-model:open="childrenDrawer"
       :title="t('sys.authority.authorityManagement')"
       width="320"
       showFooter
@@ -27,19 +27,14 @@
         <ATabPane key="1" :tab="t('sys.authority.menuAuthority')">
           <BasicTree
             checkable
-            :height="600"
             :treeData="treeMenuData"
             :checkStrictly="true"
+            :noPadding="true"
             ref="treeMenuRef"
           />
         </ATabPane>
         <ATabPane key="2" :tab="t('sys.authority.apiAuthority')">
-          <ATree
-            v-model:checked-keys="checkedApiKeys"
-            checkable
-            :height="600"
-            :tree-data="treeApiData"
-          />
+          <ATree v-model:checked-keys="checkedApiKeys" checkable :tree-data="treeApiData" />
         </ATabPane>
       </ATabs>
     </BasicDrawer>
@@ -122,8 +117,7 @@
             valueField: 'id',
             labelField: 'trans',
           });
-
-          const roleId = await validate();
+          const roleId = await getFieldsValue();
           const checkedData = await getMenuAuthority({ id: Number(roleId['id']) });
           getMenuTree().setCheckedKeys(checkedData.data.menuIds);
           getMenuTree().expandAll(true);
@@ -146,10 +140,10 @@
           for (const key in dataConv) {
             treeApiData.value.push(dataConv[key]);
           }
-          const roleId = await validate();
+          const roleId = await getFieldsValue();
           const checkedData = await getApiAuthority({ id: Number(roleId['id']) });
           if (checkedData.data.data === null) {
-            checkedApiKeys.value = [];
+            checkedApiKeys.value = convertApiToCheckedKeys([], apiData.data.data);
           } else {
             checkedApiKeys.value = convertApiToCheckedKeys(
               checkedData.data.data,
@@ -168,9 +162,10 @@
         }
       });
 
-      const [registerForm, { resetFields, setFieldsValue, validate }] = useForm({
-        labelWidth: 90,
+      const [registerForm, { resetFields, setFieldsValue, validate, getFieldsValue }] = useForm({
+        labelWidth: 160,
         baseColProps: { span: 24 },
+        layout: 'vertical',
         schemas: formSchema,
         showActionButtonGroup: false,
       });
@@ -215,7 +210,7 @@
       // handle authorization submit
       async function handleAuthorizationSubmit() {
         if (activeKey.value === '1') {
-          const roleData = await validate();
+          const roleData = await getFieldsValue();
           const result = await createOrUpdateMenuAuthority({
             roleId: Number(roleData['id']),
             menuIds: getMenuTree().getCheckedKeys()['checked'] as number[],
@@ -229,7 +224,7 @@
             checkedApiKeys.value,
             tempApiList.data.data,
           );
-          const roleData = await validate();
+          const roleData = await getFieldsValue();
           const result = await createOrUpdateApiAuthority({
             roleId: Number(roleData['id']),
             data: apiReqData,

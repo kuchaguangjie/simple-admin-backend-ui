@@ -10,6 +10,11 @@
       {{ t('common.resetText') }}
     </a-button>
 
+    <a-button type="primary" block @click="handleCopyToken" class="mb-3">
+      <CopyOutlined class="mr-2" />
+      {{ t('layout.setting.copyToken') }}
+    </a-button>
+
     <a-button color="error" block @click="handleClearDictionaryCache" class="mb-3">
       <RedoOutlined class="mr-2" />
       {{ t('layout.setting.clearDictionaryCache') }}
@@ -34,7 +39,7 @@
   import { useDesign } from '/@/hooks/web/useDesign';
   import { useI18n } from '/@/hooks/web/useI18n';
   import { useMessage } from '/@/hooks/web/useMessage';
-  import { useCopyToClipboard } from '/@/hooks/web/useCopyToClipboard';
+  import { copyText } from '/@/utils/copyTextToClipboard';
 
   import { updateColorWeak } from '/@/logics/theme/updateColorWeak';
   import { updateGrayMode } from '/@/logics/theme/updateGrayMode';
@@ -55,15 +60,17 @@
       const appStore = useAppStore();
 
       function handleCopy() {
-        const { isSuccessRef } = useCopyToClipboard(
-          JSON.stringify(unref(appStore.getProjectConfig), null, 2),
-        );
-        unref(isSuccessRef) &&
-          createSuccessModal({
-            title: t('layout.setting.operatingTitle'),
-            content: t('layout.setting.operatingContent'),
-          });
+        copyText(JSON.stringify(unref(appStore.getProjectConfig), null, 2), null);
+        createSuccessModal({
+          title: t('layout.setting.operatingTitle'),
+          content: t('layout.setting.operatingContent'),
+        });
       }
+
+      function handleCopyToken() {
+        copyText(userStore.token);
+      }
+
       function handleResetSetting() {
         try {
           appStore.setProjectConfig(defaultSetting);
@@ -102,6 +109,7 @@
         handleResetSetting,
         handleClearAndRedo,
         handleClearDictionaryCache,
+        handleCopyToken
       };
     },
   });

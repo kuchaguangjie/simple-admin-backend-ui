@@ -4,8 +4,12 @@
     <Form class="p-4 enter-x" :model="formData" :rules="getFormRules" ref="formRef">
       <div class="pt-4 pb-4">
         <ARadioGroup v-model:value="formData.msgType" button-style="solid" size="large">
-          <ARadioButton value="email"> {{ t('sys.login.email') }} </ARadioButton>
-          <ARadioButton value="sms"> {{ t('sys.login.mobile') }} </ARadioButton>
+          <ARadioButton class="bg-transparent" value="email">
+            {{ t('sys.login.email') }}
+          </ARadioButton>
+          <ARadioButton class="bg-transparent" value="sms">
+            {{ t('sys.login.mobile') }}
+          </ARadioButton>
         </ARadioGroup>
       </div>
 
@@ -122,6 +126,8 @@
       return;
     }
 
+    loading.value = true;
+
     if (formData.msgType == 'email') {
       const result = await resetPasswordByEmail({
         email: formData.target,
@@ -130,6 +136,7 @@
       });
 
       if (result.code == 0) {
+        loading.value = false;
         handleBackLogin();
       }
     } else {
@@ -140,6 +147,7 @@
       });
 
       if (result.code == 0) {
+        loading.value = false;
         handleBackLogin();
       }
     }

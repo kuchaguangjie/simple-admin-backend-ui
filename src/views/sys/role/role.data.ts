@@ -8,6 +8,7 @@ import { ApiInfo } from '/@/api/sys/model/apiModel';
 import { ApiAuthorityInfo } from '/@/api/sys/model/authorityModel';
 import { formatToDateTime } from '/@/utils/dateUtil';
 import { updateRole } from '/@/api/sys/role';
+import { cloneDeep, union } from 'lodash-es';
 
 const { t } = useI18n();
 
@@ -15,22 +16,17 @@ export const columns: BasicColumn[] = [
   {
     title: t('sys.role.roleName'),
     dataIndex: 'trans',
-    width: 200,
+    width: 50,
   },
   {
     title: t('sys.role.roleValue'),
     dataIndex: 'code',
-    width: 180,
-  },
-  {
-    title: t('common.sort'),
-    dataIndex: 'sort',
-    width: 50,
+    width: 20,
   },
   {
     title: t('common.status'),
     dataIndex: 'status',
-    width: 120,
+    width: 50,
     customRender: ({ record }) => {
       if (!Reflect.has(record, 'pendingStatus')) {
         record.pendingStatus = false;
@@ -61,16 +57,17 @@ export const columns: BasicColumn[] = [
     },
   },
   {
+    title: t('common.remark'),
+    dataIndex: 'remark',
+    width: 50,
+  },
+  {
     title: t('common.createTime'),
     dataIndex: 'createdAt',
-    width: 180,
+    width: 50,
     customRender: ({ record }) => {
       return formatToDateTime(record.createdAt);
     },
-  },
-  {
-    title: t('common.remark'),
-    dataIndex: 'remark',
   },
 ];
 
@@ -94,7 +91,6 @@ export const formSchema: FormSchema[] = [
     defaultValue: 0,
     component: 'InputNumber',
     required: true,
-    rules: [{ type: 'number', max: 10000 }],
   },
   {
     field: 'code',
@@ -136,14 +132,17 @@ export const formSchema: FormSchema[] = [
  */
 
 export function convertApiTreeData(params: ApiInfo[]): DataNode[] {
+  const finalData: DataNode[] = []
   const apiData: DataNode[] = [];
   if (params.length === 0) {
     return apiData;
   }
 
-  const apiMap = new Map<string, boolean>();
+  const apiMap = new Map<string, string>();
+  const serviceMap = new Map<string, boolean>();
   for (let i = 0; i < params.length; i++) {
-    apiMap.set(params[i].group, true);
+    apiMap.set(params[i].group, params[i].serviceName);    
+    serviceMap.set(params[i].serviceName, true);
   }
 
   for (const k of apiMap.keys()) {
@@ -156,15 +155,33 @@ export function convertApiTreeData(params: ApiInfo[]): DataNode[] {
     for (let i = 0; i < params.length; i++) {
       if (params[i].group == k) {
         apiTmp.children?.push({
-          title: t(params[i].trans),
-          key: params[i].id,
+          title: params[i].trans,
+          key: params[i].id as number,
+          disableCheckbox: params[i].isRequired,
         });
       }
     }
 
     apiData.push(apiTmp);
   }
-  return apiData;
+  
+  for (const k1 of serviceMap.keys()) {
+    const svcTmp: DataNode = {
+      title: k1,
+      key: k1,
+      children: [],
+    };
+
+    for (let i = 0; i < apiData.length; i++) {
+      if (apiMap.get(apiData[i].title) === k1) {
+        svcTmp.children?.push(cloneDeep(apiData[i]));
+      }
+    }
+
+    finalData.push(svcTmp);
+  }
+
+  return finalData;
 }
 
 /**
@@ -179,9 +196,11 @@ export function convertApiCheckedKeysToReq(checked: number[], data: ApiInfo[]): 
       pureDigit.push(checked[i]);
     }
   }
+
   // sort data
   data.sort(function (a, b) {
-    return a.id - b.id;
+    if (a.id !== undefined && b.id !== undefined) return a.id - b.id;
+    return 1;
   });
   pureDigit.sort(function (a, b) {
     return a - b;
@@ -208,12 +227,21 @@ export function convertApiCheckedKeysToReq(checked: number[], data: ApiInfo[]): 
 
 export function convertApiToCheckedKeys(checked: ApiAuthorityInfo[], data: ApiInfo[]): number[] {
   const dataMap = new Map();
-  const result: number[] = [];
+  const authorityApis: number[] = [];
+  const requiredAPIs: number[] = [];
+  data.forEach(function (value, _key) {
+    if (value.isRequired == true) {
+      requiredAPIs.push(value.id as number);
+    }
+  });
+
   for (let i = 0; i < data.length; i++) {
     dataMap.set(data[i].path + data[i].method, data[i].id);
   }
   for (let i = 0; i < checked.length; i++) {
-    result.push(dataMap.get(checked[i].path + checked[i].method));
+    authorityApis.push(dataMap.get(checked[i].path + checked[i].method));
   }
+
+  const result = union(authorityApis, requiredAPIs);
   return result;
 }

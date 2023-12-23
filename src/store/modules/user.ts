@@ -3,10 +3,14 @@ import { defineStore } from 'pinia';
 import { store } from '/@/store';
 import { RoleEnum } from '/@/enums/roleEnum';
 import { PageEnum } from '/@/enums/pageEnum';
-import { ROLES_KEY, TOKEN_KEY, USER_INFO_KEY } from '/@/enums/cacheEnum';
-import { getAuthCache, setAuthCache } from '/@/utils/auth';
-import { GetUserInfoModel, LoginReq } from '/@/api/sys/model/userModel';
-import { doLogout, getUserInfo, login } from '/@/api/sys/user';
+import { TOKEN_KEY, USER_INFO_KEY } from '/@/enums/cacheEnum';
+import {
+  GetUserInfoModel,
+  LoginByEmailReq,
+  LoginBySmsReq,
+  LoginReq,
+} from '/@/api/sys/model/userModel';
+import { doLogout, getUserInfo, login, loginByEmail, loginBySms } from '/@/api/sys/user';
 import { useI18n } from '/@/hooks/web/useI18n';
 import { useMessage } from '/@/hooks/web/useMessage';
 import { router } from '/@/router';
@@ -15,11 +19,13 @@ import { RouteRecordRaw } from 'vue-router';
 import { PAGE_NOT_FOUND_ROUTE } from '/@/router/routes/basic';
 import { isArray } from '/@/utils/is';
 import { h } from 'vue';
+import { setAuthCache } from '/@/utils/auth';
 
 interface UserState {
-  userInfo: Nullable<GetUserInfoModel>;
-  token?: string;
+  userInfo: GetUserInfoModel;
+  token: string;
   roleList: RoleEnum[];
+  roleName: string[];
   sessionTimeout?: boolean;
   lastUpdateTime: number;
 }
@@ -28,11 +34,20 @@ export const useUserStore = defineStore({
   id: 'app-user',
   state: (): UserState => ({
     // user info
-    userInfo: null,
+    userInfo: {
+      userId: '',
+      username: '',
+      nickname: '',
+      avatar: '',
+      homePath: '',
+      roleName: [],
+    },
     // token
-    token: undefined,
+    token: '',
     // roleList
     roleList: [],
+    // role name
+    roleName: [],
     // Whether the login expired
     sessionTimeout: false,
     // Last fetch time
@@ -40,13 +55,16 @@ export const useUserStore = defineStore({
   }),
   getters: {
     getUserInfo(): GetUserInfoModel {
-      return this.userInfo || getAuthCache<GetUserInfoModel>(USER_INFO_KEY) || {};
+      return this.userInfo;
     },
     getToken(): string {
-      return this.token || getAuthCache<string>(TOKEN_KEY);
+      return this.token;
     },
     getRoleList(): RoleEnum[] {
-      return this.roleList.length > 0 ? this.roleList : getAuthCache<RoleEnum[]>(ROLES_KEY);
+      return this.roleList;
+    },
+    getRoleName(): string[] {
+      return this.roleName;
     },
     getSessionTimeout(): boolean {
       return !!this.sessionTimeout;
@@ -57,25 +75,34 @@ export const useUserStore = defineStore({
   },
   actions: {
     setToken(info: string | undefined) {
-      this.token = info ? info : ''; // for null or undefined value
+      this.token = info ? info : '';
       setAuthCache(TOKEN_KEY, info);
     },
     setRoleList(roleList: RoleEnum[]) {
       this.roleList = roleList;
-      setAuthCache(ROLES_KEY, roleList);
     },
-    setUserInfo(info: GetUserInfoModel | null) {
+    setRoleName(roleName: string[]) {
+      this.roleName = roleName;
+    },
+    setUserInfo(info: GetUserInfoModel) {
       this.userInfo = info;
       this.lastUpdateTime = new Date().getTime();
-      setAuthCache(USER_INFO_KEY, info);
     },
     setSessionTimeout(flag: boolean) {
       this.sessionTimeout = flag;
     },
     resetState() {
-      this.userInfo = null;
+      this.userInfo = {
+        userId: '',
+        username: '',
+        nickname: '',
+        avatar: '',
+        homePath: '',
+        roleName: [],
+      };
       this.token = '';
       this.roleList = [];
+      this.roleName = [];
       this.sessionTimeout = false;
     },
     /**
@@ -90,6 +117,54 @@ export const useUserStore = defineStore({
       try {
         const { goHome = true, mode, ...loginParams } = params;
         const data = await login(loginParams, mode);
+        if (data.code !== 0) {
+          return Promise.reject(null);
+        }
+        const { token } = data.data;
+
+        // save token
+        this.setToken(token);
+        return this.afterLoginAction(goHome);
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    },
+    /**
+     * @description: login by email
+     */
+    async loginByEmail(
+      params: LoginByEmailReq & {
+        goHome?: boolean;
+        mode?: ErrorMessageMode;
+      },
+    ): Promise<GetUserInfoModel | null> {
+      try {
+        const { goHome = true, mode, ...loginParams } = params;
+        const data = await loginByEmail(loginParams, mode);
+        if (data.code !== 0) {
+          return Promise.reject(null);
+        }
+        const { token } = data.data;
+
+        // save token
+        this.setToken(token);
+        return this.afterLoginAction(goHome);
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    },
+    /**
+     * @description: login by sms
+     */
+    async loginBySms(
+      params: LoginBySmsReq & {
+        goHome?: boolean;
+        mode?: ErrorMessageMode;
+      },
+    ): Promise<GetUserInfoModel | null> {
+      try {
+        const { goHome = true, mode, ...loginParams } = params;
+        const data = await loginBySms(loginParams, mode);
         if (data.code !== 0) {
           return Promise.reject(null);
         }
@@ -127,7 +202,7 @@ export const useUserStore = defineStore({
     async getUserInfoAction(): Promise<GetUserInfoModel | null> {
       if (!this.getToken) return null;
       const userInfo = await getUserInfo();
-      const { roles = [] } = userInfo.data;
+      const { roles = [], roleName = [] } = userInfo.data;
       if (isArray(roles)) {
         const roleList = roles.map((item) => item.valueOf) as unknown as RoleEnum[];
         this.setRoleList(roleList);
@@ -135,6 +210,7 @@ export const useUserStore = defineStore({
         userInfo.data.roles = [];
         this.setRoleList([]);
       }
+      this.setRoleName(roleName);
       this.setUserInfo(userInfo.data);
       return userInfo.data;
     },
@@ -153,7 +229,14 @@ export const useUserStore = defineStore({
       }
       this.setToken(undefined);
       this.setSessionTimeout(false);
-      this.setUserInfo(null);
+      this.setUserInfo({
+        userId: '',
+        username: '',
+        nickname: '',
+        avatar: '',
+        homePath: '',
+        roleName: [],
+      });
       goLogin && router.push(PageEnum.BASE_LOGIN);
     },
 
@@ -172,6 +255,9 @@ export const useUserStore = defineStore({
         },
       });
     },
+  },
+  persist: {
+    key: USER_INFO_KEY,
   },
 });
 

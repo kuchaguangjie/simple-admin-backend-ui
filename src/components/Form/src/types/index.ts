@@ -116,4 +116,8 @@ export type ComponentType =
   | 'Rate'
   | 'Divider'
   | 'ApiTransfer'
-  | 'DictionarySelect';
+  | 'DictionarySelect'
+  | 'CropperAvatar'
+  | 'Tinymce'
+  | 'ImageUpload'
+  | 'CodeEditor';
